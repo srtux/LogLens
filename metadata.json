@@ -1,0 +1,5 @@
+{
+  "name": "LogLens",
+  "description": "A high-performance developer-friendly log viewer",
+  "requestFramePermissions": []
+}

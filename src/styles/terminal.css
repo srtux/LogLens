@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+:root {
+  --bg-color: #1e1e1e;
+  --text-color: #d4d4d4;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: 'Fira Code', 'Roboto Mono', monospace;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4f4f4f;
+}
+
+/* ANSI Colors (Standard Palette) - used by ansi_up if classes are enabled */
+.ansi-black-fg { color: #000000; }
+.ansi-red-fg { color: #cd3131; }
+.ansi-green-fg { color: #0dbc79; }
+.ansi-yellow-fg { color: #e5e510; }
+.ansi-blue-fg { color: #2472c8; }
+.ansi-magenta-fg { color: #bc3fbc; }
+.ansi-cyan-fg { color: #11a8cd; }
+.ansi-white-fg { color: #e5e5e5; }
+
+.ansi-bright-black-fg { color: #666666; }
+.ansi-bright-red-fg { color: #f14c4c; }
+.ansi-bright-green-fg { color: #23d18b; }
+.ansi-bright-yellow-fg { color: #f5f543; }
+.ansi-bright-blue-fg { color: #3b8eea; }
+.ansi-bright-magenta-fg { color: #d670d6; }
+.ansi-bright-cyan-fg { color: #29b8db; }
+.ansi-bright-white-fg { color: #ffffff; }
+
+/* Ensure the extension root takes full height */
+#cloudlog-term-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  background-color: #1e1e1e;
+}

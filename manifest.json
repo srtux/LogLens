@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "CloudLog Term",
+  "version": "1.0.0",
+  "description": "Transforms raw JSON log dumps into a high-performance, interactive, terminal-style log viewer.",
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["assets/content.js"],
+      "css": ["assets/content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Format Logs"
+  }
+}
