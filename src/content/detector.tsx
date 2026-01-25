@@ -1,7 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from '../App';
-import '../styles/terminal.css';
+import '../index.css';
 
 // Function to detect if the page contains a raw JSON array
 function detectAndMount() {
@@ -18,7 +18,7 @@ function detectAndMount() {
       // just check the first few chars to be reasonably sure.
       // Or we can just let the App component handle the parsing error.
       
-      console.log('CloudLog Term: JSON array detected. Mounting UI...');
+      console.log('LogLens: JSON array detected. Mounting UI...');
       mountApp();
     } catch (e) {
       // Not valid JSON
@@ -32,7 +32,7 @@ function mountApp() {
   // However, to be safe and allow "exit", we might want to hide it instead.
   // For MVP, we'll create a root div that covers everything.
 
-  const rootId = 'cloudlog-term-root';
+  const rootId = 'loglens-root';
   if (document.getElementById(rootId)) return; // Already mounted
 
   const rootDiv = document.createElement('div');

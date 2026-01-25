@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "CloudLog Term",
+  "name": "LogLens",
   "version": "1.0.0",
   "description": "Transforms raw JSON log dumps into a high-performance, interactive, terminal-style log viewer.",
   "permissions": [
