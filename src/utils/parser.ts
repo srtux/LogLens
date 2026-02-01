@@ -100,6 +100,16 @@ function normalizeLogEntry(entry: any, index: number): LogEntry {
   };
 }
 
+export function parseLogsFromJSON(data: string | any[]): LogEntry[] {
+  const entries = typeof data === 'string' ? JSON.parse(data) : data;
+
+  if (!Array.isArray(entries)) {
+    throw new Error('Expected a JSON array of LogEntry objects.');
+  }
+
+  return entries.map(normalizeLogEntry);
+}
+
 export function convertAnsiToHtml(text: string): string {
   return ansi_up.ansi_to_html(text);
 }

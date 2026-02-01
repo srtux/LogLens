@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { parseLogsFromDOM, LogEntry } from './utils/parser';
+import { parseLogsFromDOM, parseLogsFromJSON, LogEntry } from './utils/parser';
 import LogList from './components/LogList';
 import Timeline from './components/Timeline';
-import { Terminal, Search, Filter, X, ChevronDown, ChevronRight, PanelLeft, Maximize2, Minimize2, WrapText } from 'lucide-react';
+import { Terminal, Search, Filter, X, ChevronDown, ChevronRight, PanelLeft, Maximize2, Minimize2, WrapText, Upload } from 'lucide-react';
 import { BarChart, Bar, Tooltip, ResponsiveContainer, Cell, XAxis } from 'recharts';
 import { parseISO, differenceInMilliseconds, addMilliseconds, format } from 'date-fns';
 import { VirtuosoHandle } from 'react-virtuoso';
@@ -20,17 +20,98 @@ export default function App() {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isWrapEnabled, setIsWrapEnabled] = useState(false);
   const [expandedFacetCategories, setExpandedFacetCategories] = useState<Set<string>>(new Set(['Resource Type', 'Severity']));
+  const [isDragging, setIsDragging] = useState(false);
 
   const virtuosoRef = useRef<VirtuosoHandle>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setLoading(true);
+    setError(null);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target?.result as string;
+        const parsed = parseLogsFromJSON(text);
+        if (parsed.length > 0) {
+          setLogs(parsed);
+          setSearchTerm('');
+          setSelectedFacets({});
+        } else {
+          setError('The file contained an empty array.');
+        }
+      } catch (err: any) {
+        setError(`Failed to parse log file: ${err.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+    reader.onerror = () => {
+      setError('Failed to read file.');
+      setLoading(false);
+    };
+    reader.readAsText(file);
+
+    // Reset input so the same file can be re-selected
+    event.target.value = '';
+  };
+
+  const handleDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    setIsDragging(false);
+    const file = event.dataTransfer.files?.[0];
+    if (!file) return;
+
+    // Synthesize a change event-like flow
+    setLoading(true);
+    setError(null);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target?.result as string;
+        const parsed = parseLogsFromJSON(text);
+        if (parsed.length > 0) {
+          setLogs(parsed);
+          setSearchTerm('');
+          setSelectedFacets({});
+        } else {
+          setError('The file contained an empty array.');
+        }
+      } catch (err: any) {
+        setError(`Failed to parse log file: ${err.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+    reader.onerror = () => {
+      setError('Failed to read file.');
+      setLoading(false);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleDragOver = (event: React.DragEvent) => {
+    event.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent) => {
+    event.preventDefault();
+    setIsDragging(false);
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
       const parsedLogs = parseLogsFromDOM();
       if (parsedLogs.length > 0) {
         setLogs(parsedLogs);
-      } else {
-        setError("No valid JSON logs found in this tab.");
       }
+      // Don't set error — just show empty state with import option
       setLoading(false);
     }, 100);
     return () => clearTimeout(timer);
@@ -257,25 +338,70 @@ export default function App() {
     );
   }
 
-  if (error) {
+  if (error || logs.length === 0) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[#1e1e1e] text-red-400 font-mono p-8 text-center">
-        <div>
-          <h2 className="text-xl font-bold mb-2">Error</h2>
-          <p>{error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded text-white text-sm"
+      <div
+        className="flex items-center justify-center h-screen bg-[#1e1e1e] text-gray-300 font-mono p-8 text-center relative"
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+      >
+        {isDragging && (
+          <div className="absolute inset-0 z-[100] bg-black/70 flex items-center justify-center pointer-events-none">
+            <div className="flex flex-col items-center gap-3 text-white">
+              <Upload className="w-12 h-12 text-green-400" />
+              <p className="text-lg font-medium">Drop JSON log file to import</p>
+            </div>
+          </div>
+        )}
+        <div className="flex flex-col items-center gap-6 max-w-md">
+          <Terminal className="w-14 h-14 text-green-500" />
+          <h1 className="text-2xl font-bold text-white">LogLens</h1>
+          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {!error && (
+            <p className="text-gray-400 text-sm">
+              No logs detected on this page. Import a JSON log file containing an array of Cloud Logging <code className="text-green-400">LogEntry</code> objects.
+            </p>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            onChange={handleFileImport}
+            className="hidden"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium transition-colors"
           >
-            Reload Page
+            <Upload className="w-4 h-4" />
+            Import JSON Log File
           </button>
+          <p className="text-gray-600 text-xs">
+            Expects a JSON array of Cloud Logging LogEntry objects
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#1e1e1e] text-gray-300 font-mono overflow-hidden relative">
+    <div
+      className="flex flex-col h-screen bg-[#1e1e1e] text-gray-300 font-mono overflow-hidden relative"
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+    >
+      {/* Drag overlay */}
+      {isDragging && (
+        <div className="absolute inset-0 z-[100] bg-black/70 flex items-center justify-center pointer-events-none">
+          <div className="flex flex-col items-center gap-3 text-white">
+            <Upload className="w-12 h-12 text-green-400" />
+            <p className="text-lg font-medium">Drop JSON log file to import</p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       {!isFullScreen && (
         <header className="flex items-center h-14 border-b border-gray-800 px-4 bg-[#252526] shrink-0 z-10 gap-4">
@@ -306,9 +432,25 @@ export default function App() {
 
           <div className="ml-auto flex items-center gap-1 text-xs text-gray-400 shrink-0">
             <span className="hidden sm:inline">{filteredLogs.length.toLocaleString()} / {logs.length.toLocaleString()} events</span>
-            
+
+            {/* Import File */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,application/json"
+              onChange={handleFileImport}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="p-1.5 rounded hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
+              title="Import JSON Log File"
+            >
+              <Upload className="w-4 h-4" />
+            </button>
+
             {/* Full Screen Toggle */}
-            <button 
+            <button
               onClick={() => setIsFullScreen(true)}
               className="p-1.5 rounded hover:bg-gray-700 text-gray-400 hover:text-white transition-colors"
               title="Enter Full Screen"
